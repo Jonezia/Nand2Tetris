@@ -1,0 +1,44 @@
+// Implements the game
+
+class Game {
+    field Turtle turtle;
+
+    constructor Game new() {
+        let turtle = Turtle.new(0,0,1);
+        return this;
+    }
+
+    method void dispose() {
+        do turtle.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    method void run() {
+       var char key;  // the key currently pressed by the user
+       var boolean exit;
+       let exit = false;
+
+       do turtle.draw();
+
+       while (~exit) {
+          // waits for a key to be pressed
+          while (key = 0) {
+             let key = Keyboard.keyPressed();
+          }
+          if (key = 81)  { let exit = true; }     // q key
+          do turtle.erase();
+          if (key = 131) { do turtle.moveForward(); }   // up arrow
+          if (key = 133) { do turtle.moveBackwards(); }   // down arrow
+          if (key = 130) { do turtle.turnLeft(); }   // left arrow
+          if (key = 132) { do turtle.turnRight(); }   // right arrow
+          do turtle.calculateMemAddress();
+          do turtle.draw();
+          // waits for the key to be released
+          while (~(key = 0)) {
+             let key = Keyboard.keyPressed();
+          }
+      }
+      return;
+    }
+}

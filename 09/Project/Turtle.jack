@@ -1,0 +1,252 @@
+// Implements the Turtle class
+
+class Turtle {
+    field int x, y, direction, memAddress;
+
+    // direction:
+    // 1: right
+    // 2: down
+    // 3: left
+    // 4: up
+
+    constructor Turtle new (int Ax, int Ay, int Adirection) {
+        let x = Ax;
+        let y = Ay;
+        do calculateMemAddress();
+        let direction = Adirection;
+        return this;
+    }
+
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    method void calculateMemAddress() {
+        let memAddress = (y*32)*16 + x + 16384;
+        return;
+    }
+
+    method void moveForward() {
+        if (direction = 1) {
+            do moveRight();
+        }
+        if (direction = 2) {
+            do moveDown();
+        }
+        if (direction = 3) {
+            do moveLeft();
+        }
+        if (direction = 4) {
+            do moveUp();
+        }
+        return;
+    }
+
+    method void moveBackwards() {
+        if (direction = 1) {
+            do moveLeft();
+        }
+        if (direction = 2) {
+            do moveUp();
+        }
+        if (direction = 3) {
+            do moveRight();
+        }
+        if (direction = 4) {
+            do moveDown();
+        }
+        return;
+    }
+
+    method void moveRight() {
+        if (x < 32) {
+            let x = x + 1;
+        }
+        return;
+    }
+
+    method void moveDown() {
+        if (y < 16) {
+            let y = y + 1;
+        }
+        return;
+    }
+
+    method void moveLeft() {
+        if (x > 0) {
+            let x = x - 1;
+        }
+        return;
+    }
+
+    method void moveUp() {
+        if (y > 0) {
+            let y = y - 1;
+        }
+        return;
+    }
+
+    method void turnLeft() {
+        if (direction = 1) {
+            let direction = 4;
+        } else {
+            let direction = direction - 1;
+        }
+        return;
+    }
+
+    method void turnRight() {
+        if (direction = 4) {
+            let direction = 1;
+        } else {
+            let direction = direction + 1;
+        }
+        return;
+    }
+
+    method void draw() {
+        if (direction = 1) {
+            do drawRight();
+        }
+        if (direction = 2) {
+            do drawDown();
+        }
+        if (direction = 3) {
+            do drawLeft();
+        }
+        if (direction = 4) {
+            do drawUp();
+        }
+        return;
+    }
+
+    method void erase() {
+        if (direction = 1) {
+            do eraseLeftRight();
+        }
+        if (direction = 2) {
+            do eraseUpDown();
+        }
+        if (direction = 3) {
+            do eraseLeftRight();
+        }
+        if (direction = 4) {
+            do eraseUpDown();
+        }
+        return;
+    }
+
+    method void drawRight() {
+        do Memory.poke(memAddress+0, 0);
+        do Memory.poke(memAddress+32, 0);
+        do Memory.poke(memAddress+64, 0);
+        do Memory.poke(memAddress+96, 1026);
+        do Memory.poke(memAddress+128, 756);
+        do Memory.poke(memAddress+160, 504);
+        do Memory.poke(memAddress+192, 15356);
+        do Memory.poke(memAddress+224, 32764);
+        do Memory.poke(memAddress+256, 32764);
+        do Memory.poke(memAddress+288, 15356);
+        do Memory.poke(memAddress+320, 504);
+        do Memory.poke(memAddress+352, 756);
+        do Memory.poke(memAddress+384, 1026);
+        do Memory.poke(memAddress+416, 0);
+        do Memory.poke(memAddress+448, 0);
+        do Memory.poke(memAddress+480, 0);
+        return;
+    }
+
+    method void drawDown() {
+      	do Memory.poke(memAddress+0, 0);
+      	do Memory.poke(memAddress+32, 4104);
+      	do Memory.poke(memAddress+64, 3024);
+      	do Memory.poke(memAddress+96, 2016);
+      	do Memory.poke(memAddress+128, 4080);
+      	do Memory.poke(memAddress+160, 4080);
+      	do Memory.poke(memAddress+192, 4080);
+      	do Memory.poke(memAddress+224, 4080);
+      	do Memory.poke(memAddress+256, 2016);
+      	do Memory.poke(memAddress+288, 3024);
+      	do Memory.poke(memAddress+320, 4488);
+      	do Memory.poke(memAddress+352, 960);
+      	do Memory.poke(memAddress+384, 960);
+      	do Memory.poke(memAddress+416, 960);
+      	do Memory.poke(memAddress+448, 384);
+      	do Memory.poke(memAddress+480, 0);
+      	return;
+    }
+
+    method void drawLeft() {
+      	do Memory.poke(memAddress+0, 0);
+      	do Memory.poke(memAddress+32, 0);
+      	do Memory.poke(memAddress+64, 0);
+      	do Memory.poke(memAddress+96, 16416);
+      	do Memory.poke(memAddress+128, 12096);
+      	do Memory.poke(memAddress+160, 8064);
+      	do Memory.poke(memAddress+192, 16348);
+      	do Memory.poke(memAddress+224, 16382);
+      	do Memory.poke(memAddress+256, 16382);
+      	do Memory.poke(memAddress+288, 16348);
+      	do Memory.poke(memAddress+320, 8064);
+      	do Memory.poke(memAddress+352, 12096);
+      	do Memory.poke(memAddress+384, 16416);
+      	do Memory.poke(memAddress+416, 0);
+      	do Memory.poke(memAddress+448, 0);
+      	do Memory.poke(memAddress+480, 0);
+      	return;
+    }
+
+    method void drawUp() {
+        do Memory.poke(memAddress+0, 0);
+        do Memory.poke(memAddress+32, 384);
+        do Memory.poke(memAddress+64, 960);
+        do Memory.poke(memAddress+96, 960);
+        do Memory.poke(memAddress+128, 960);
+        do Memory.poke(memAddress+160, 4488);
+        do Memory.poke(memAddress+192, 3024);
+        do Memory.poke(memAddress+224, 2016);
+        do Memory.poke(memAddress+256, 4080);
+        do Memory.poke(memAddress+288, 4080);
+        do Memory.poke(memAddress+320, 4080);
+        do Memory.poke(memAddress+352, 4080);
+        do Memory.poke(memAddress+384, 2016);
+        do Memory.poke(memAddress+416, 3024);
+        do Memory.poke(memAddress+448, 4104);
+        do Memory.poke(memAddress+480, 0);
+        return;
+    }
+
+    method void eraseLeftRight() {
+        do Memory.poke(memAddress+96, 0);
+        do Memory.poke(memAddress+128, 0);
+        do Memory.poke(memAddress+160, 0);
+        do Memory.poke(memAddress+192, 0);
+        do Memory.poke(memAddress+224, 0);
+        do Memory.poke(memAddress+256, 0);
+        do Memory.poke(memAddress+288, 0);
+        do Memory.poke(memAddress+320, 0);
+        do Memory.poke(memAddress+352, 0);
+        do Memory.poke(memAddress+384, 0);
+        return;
+    }
+
+    method void eraseUpDown() {
+        do Memory.poke(memAddress+32, 0);
+        do Memory.poke(memAddress+64, 0);
+        do Memory.poke(memAddress+96, 0);
+        do Memory.poke(memAddress+128, 0);
+        do Memory.poke(memAddress+160, 0);
+        do Memory.poke(memAddress+192, 0);
+        do Memory.poke(memAddress+224, 0);
+        do Memory.poke(memAddress+256, 0);
+        do Memory.poke(memAddress+288, 0);
+        do Memory.poke(memAddress+320, 0);
+        do Memory.poke(memAddress+352, 0);
+        do Memory.poke(memAddress+384, 0);
+        do Memory.poke(memAddress+416, 0);
+        do Memory.poke(memAddress+448, 0);
+        return;
+    }
+
+}
