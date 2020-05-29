@@ -25,9 +25,7 @@ function Turtle.calculateMemAddress 0
 push argument 0
 pop pointer 0
 push this 1
-push constant 32
-call Math.multiply 2
-push constant 16
+push constant 512
 call Math.multiply 2
 push this 0
 add

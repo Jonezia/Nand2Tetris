@@ -23,7 +23,7 @@ class Turtle {
     }
 
     method void calculateMemAddress() {
-        let memAddress = (y*32)*16 + x + 16384;
+        let memAddress = y*512 + x + 16384;
         return;
     }
 
