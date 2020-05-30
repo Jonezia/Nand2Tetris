@@ -127,7 +127,7 @@ class Parser:
             elif self.currentTokenName in ["static","field"]:
                 self.parseClassVarDec()
             elif self.currentTokenName in ["constructor","function","method","void"]:
-                self.parseSubRoutineDec()
+                self.parseSubroutineDec()
             elif self.currentTokenName == "var":
                 self.parseVarDec()
         else:
@@ -142,6 +142,7 @@ class Parser:
                 self.add_token(type,self.currentTokenName)
         if errMessage:
             self.error_message(errMessage)
+        self.get_next_token()
 
     def parseMultiple(self,function):
         if function():
@@ -153,24 +154,12 @@ class Parser:
             self.file_out.write("<class>\n")
             self.add_token("keyword","class")
             self.get_next_token()
-            # className: identifer
-            if self.currentTokenType == "identifier":
-                self.add_token("identifier",self.currentTokenName)
-            else:
-                self.error_message("expected className identifier in class declaration")
-            self.get_next_token()
-            # '{' classVarDec* subroutineDec* '}'
-            if self.currentTokenName == "{":
-                self.add_token("symbol","{")
-            else:
-                self.error_message("expected { in class declaration")
-            self.get_next_token()
+            self.lookfor("type",None,"identifier","className identifier in \
+            class declaration")
+            self.lookfor("name","{",None,"{ in class declaration")
             self.parseMultiple(self.parseClassVarDec)
             self.parseMultiple(self.parseSubroutineDec)
-            if self.currentTokenName == "}":
-                self.add_token("symbol","}")
-            else:
-                self.error_message("expected } in class declaration")
+            self.lookfor("name","}",None,"} in class declaration")
             self.file_out.write("</class>\n")
             self.get_next_token()
             return True
@@ -193,31 +182,37 @@ class Parser:
                 self.error_message("Expected type in class variable declaration")
             self.get_next_token()
             # varName: identifier
-            if self.currentTokenType == "identifier":
-                self.add_token("identifier",self.currentTokenName)
-            else:
-                self.error_message("Expected variable name identifier in class \
-                variable declaration")
-            self.get_next_token()
+            self.lookfor("type",None,"identifier","variable name identifier in \
+            class variable declaration")
             # (',' varName)* ';'
             while self.currentTokenName == ",":
                 self.add_token("symbol",",")
                 self.get_next_token()
-                if self.currentTokenType == "identifier":
-                    self.add_token("identifier",self.currentTokenName)
-                else:
-                    self.error_message("Expected variable name identifier after \
-                    comma in class variable declaration")
-                self.get_next_token()
-            if self.currentTokenName == ";":
-                self.add_token("symbol",";")
-            else:
-                self.error_message("Expected ; after class variable declaration")
+                self.lookfor("type",None,"identifier","variable name identifier \
+                after comma in class variable declaration")
+            self.lookfor("name",";",None,"; after class variable declaration")
             self.file_out.write("</classVarDec>\n")
-            self.get_next_token()
             return True
         else:
             return False
+
+    def lookfortype(void,errMessage):
+        # helper function to parse (type)
+        if void:
+            if self.currentTokenType == "identifier":
+                self.add_token("identifier",self.currentTokenName)
+            elif self.currentTokenName in ["int","char","boolean","void"]:
+                self.add_token("keyword",self.currentTokenName)
+            else:
+                self.error_message("Expected type or void " + errMessage)
+        else:
+            if self.currentTokenType == "identifier":
+                self.add_token("identifier",self.currentTokenName)
+            elif self.currentTokenName in ["int","char","boolean"]:
+                self.add_token("keyword",self.currentTokenName)
+            else:
+                self.error_message("Expected type " + errMessage)
+        self.get_next_token()
 
     def parseSubroutineDec(self):
         # ('constructor' | 'function' | 'method') ('void' | type) subroutineName
@@ -228,47 +223,20 @@ class Parser:
             self.get_next_token()
             # ('void' | type)
             # type: 'int' | 'char' | 'boolean' | className className: identifier
-            if self.currentTokenType == "identifier":
-                self.add_token("identifier",self.currentTokenName)
-            elif self.currentTokenName in ["int","char","boolean","void"]:
-                self.add_token("keyword",self.currentTokenName)
-            else:
-                self.error_message("Expected type or void in subroutine declaration")
-            self.get_next_token()
+            self.lookfortype(True,"in subroutine declaration")
             # subroutineName: identifier
-            if self.currentTokenType == "identifier":
-                self.add_token("identifier",self.currentTokenName)
-            else:
-                self.error_message("expected subroutine name identifier in \
-                subroutine declaration")
-            self.get_next_token()
+            self.lookfor("type",None,"identifier","subroutine name identifier in \
+            subroutine declaration")
             # '(' parameterList ')'
-            if self.currentTokenName == "(":
-                self.add_token("symbol","(")
-            else:
-                self.error_message("expected ( in subroutine declaration")
-            self.get_next_token()
+            self.lookfor("name","(",None,"( in subroutine declaration")
             self.parseParameterList()
-            if self.currentTokenName == ")":
-                self.add_token("symbol",")")
-            else:
-                self.error_message("expected ) in subroutine declaration")
-            self.get_next_token()
+            self.lookfor("name",")",None,") in subroutine declaration")
             # subroutineBody: '{' varDec* statements '}'
-            if self.currentTokenName == "{":
-                self.add_token("symbol","{")
-            else:
-                self.error_message("expected { in subroutine declaration")
-            self.get_next_token()
+            self.lookfor("name","{",None,"{ in subroutine declaration")
             self.parseMultiple(self.parseVarDec)
             self.parseStatements()
-            self.get_next_token()
-            if self.currentTokenName == "}":
-                self.add_token("symbol","}")
-            else:
-                self.error_message("expected } in subroutine declaration")
+            self.lookfor("name","}",None,"} in subroutine declaration")
             self.file_out.write("</subroutineDec>\n")
-            self.get_next_token()
             return True
         else:
             return False
@@ -279,33 +247,15 @@ class Parser:
         if self.currentTokenType == "identifier" or self.currentTokenName
         in ["int","char","boolean"]:
             # (type varName) varName: identifier
-            if self.currentTokenType == "identifier":
-                self.add_token("identifier",self.currentTokenName)
-            elif self.currentTokenName in ["int","char","boolean"]:
-                self.add_token("keyword",self.currentTokenName)
-            self.get_next_token()
-            if self.currentTokenType == "identifier":
-                self.add_token("identifer",self.currentTokenName)
-            else:
-                self.error_message("expected varName identifier in parameter list")
-            self.get_next_token()
+            self.lookfortype(False,"in parameter list")
+            self.lookfor("type",None,"identifier","varName identifier in parameter list")
             # (',' type varName)* varName: identifier
             while self.currentTokenName == ",":
                 self.add_token("symbol",",")
                 self.get_next_token()
-                if self.currentTokenType == "identifier":
-                    self.add_token("identifier",self.currentTokenName)
-                elif self.currentTokenName in ["int","char","boolean"]:
-                    self.add_token("keyword",self.currentTokenName)
-                else:
-                    self.error_message("expected type after comma in parameter list")
-                self.get_next_token()
-                if self.currentTokenType == "identifier":
-                    self.add_token("identifier",self.currentTokenName)
-                else:
-                    self.error_message("expected varName identifier after comma \
-                    in parameter list")
-                self.get_next_token()
+                self.lookfortype(False,"in parameter list after ,")
+                self.lookfor("type",None,"identifier","varName identifier after \
+                comma in parameter list"")
         self.file_out.write("</parameterList>\n")
 
     def parseVarDec(self):
@@ -314,33 +264,16 @@ class Parser:
             self.file_out.write("<varDec>\n")
             self.add_token("keyword","var")
             self.get_next_token()
-            if self.currentTokenType == "identifier":
-                self.add_token("identifier",self.currentTokenName)
-            elif self.currentTokenName in ["int","char","boolean"]:
-                self.add_token("keyword",self.currentTokenName)
-            else:
-                self.error_message("expected type in variable declaration")
-            self.get_next_token()
-            if self.currentTokenType == "identifier":
-                self.add_token("identifier",self.currentTokenName)
-            else:
-                self.error_message("expected varName identifer in variable declaration")
-            self.get_next_token()
+            self.lookfortype(False,"in variable declaration")
+            self.lookfor("type",None,"identifier","varName identifer in \
+            variable declaration")
             while self.currentTokenName == ",":
                 self.add_token("symbol",",")
                 self.get_next_token()
-                if self.currentTokenType == "identifier":
-                    self.add_token("identifier",self.currentTokenName)
-                else:
-                    self.error_message("expected varName identifier after comma \
-                    in variable declaration")
-                self.get_next_token()
-            if self.currentTokenName == ";":
-                self.add_token("symbol",";")
-            else:
-                self.error_message("expected semicolon after variable declaration")
+                self.lookfor("type",None,"identifier","varName identifier after \
+                comma in variable declaration")
+            self.lookfor("name",";",None,"semicolon after variable declaration")
             self.file_out.write("</varDec>\n")
-            self.get_next_token()
             return True
         else:
             return False
@@ -375,32 +308,16 @@ class Parser:
             self.file_out.write("<letStatement>\n")
             self.add_token("keyword","let")
             self.get_next_token()
-            if self.currentTokenType == "identifier":
-                self.add_token("identifier",self.currentTokenName)
-            else:
-                self.error_message("expected varName identifier after let")
-            self.get_next_token()
+            self.lookfor("type",None,"identifier","varName identifier after let")
             if self.currentTokenName == "[":
                 self.add_token("symbol","[")
                 self.get_next_token()
                 self.parseExpression()
-                if self.currentTokenName == "]":
-                    self.add_token("symbol","]")
-                else:
-                    self.error_message("expected ] after [ in let statement")
-                self.get_next_token()
-            if self.currentTokenName == "=":
-                self.add_token("symbol","=")
-            else:
-                self.error_message("expected = in let statement")
-            self.get_next_token()
+                self.lookfor("name","]",None,"] after [ in let statement]")
+            self.lookfor("name","=",None,"= in let statement")
             self.parseExpression()
-            if self.currentTokenName == ";":
-                self.add_token("symbol",";")
-            else:
-                self.error_message("expected ; after let statement")
+            self.lookfor("name",";",None,"; after let statement")
             self.file_out.write("</letStatement>\n")
-            self.get_next_token()
             return True
         else:
             return False
@@ -411,41 +328,18 @@ class Parser:
             self.file_out.write("<ifStatement>\n")
             self.add_token("keyword","if")
             self.get_next_token()
-            if self.currentTokenName == "(":
-                self.add_token("symbol","(")
-            else:
-                self.error_message("expected ( in if statement")
-            self.get_next_token()
+            self.lookfor("name","(",None,"( in if statement)")
             self.parseExpression()
-            if self.currentTokenName == ")":
-                self.add_token("symbol",")")
-            else:
-                self.error_message("expected ) in if statement")
-            self.get_next_token()
-            if self.currentTokenName == "{":
-                self.add_token("symbol","{")
-            else:
-                self.error_message("expected { in if statement")
+            self.lookfor("name",")",None,") in if statement")
+            self.lookfor("name","{",None,"{ in if statement")
             self.parseStatements()
-            if self.currentTokenName == "{":
-                self.add_token("symbol","}")
-            else:
-                self.error_message("expected } in if statement")
-            self.get_next_token()
+            self.lookfor("name","}",None,"} in if statement")
             if self.currentTokenName == "else":
                 self.add_token("keyword","else")
                 self.get_next_token()
-                if self.currentTokenName == "{":
-                    self.add_token("symbol","{")
-                else:
-                    self.error_message("expected { after else in if statement")
-                self.get_next_token()
+                self.lookfor("name","{",None,"{ after else in if statement")
                 self.parseStatements()
-                if self.currentTokenName == "}":
-                    self.add_token("symbol","}")
-                else:
-                    self.error_message("expected } after else in if statement")
-                self.get_next_token()
+                self.lookfor("name","}",None,"} after else in if statement")
             self.file_out.write("</ifStatement>\n")
             return True
         else:
@@ -457,22 +351,27 @@ class Parser:
             self.file_out.write("<whileStatement>\n")
             self.add_token("keyword","while")
             self.get_next_token()
-            if self.currentTokenName == "(":
-                self.add_token("symbol","(")
-            else:
-                self.error_message("expected ( in while statement")
-            self.get_next_token()
+            self.lookfor("name","(",None,"( in while statement")
             self.parseExpression()
-            if self.currentTokenName == ")":
-                self.add_token("symbol",")")
-            else:
-                self.error_message("expected ) in while statement")
-            self.get_next_token()
+            self.lookfor("name",")",None,") in while statement")
+            self.lookfor("name","{",None,"{ in while statement")
+            self.parseStatements()
+            self.lookfor("name","}",None,"} in while statement")
             self.file_out.write("</whileStatement>\n")
-            self.get_next_token()
             return True
         else:
             return False
+
+    def parseSubroutineCall(location):
+        # helper function for parseDoStatement and parseTerm
+        if self.currentTokenName == ".":
+            self.add_token("symbol",".")
+            self.get_next_token()
+            self.lookfor("type",None,"identifier","subroutineName identifier \
+            after . in do statement")
+        self.lookfor("name","(",None,"( in " + location)
+        self.parseExpressionList()
+        self.lookfor("name",")",None,") after ( in " + location)
 
     def parseDoStatement(self):
         # 'do' subroutineCall ';'
@@ -481,8 +380,14 @@ class Parser:
         # subroutineName, varName, className: identifier
         if self.currentTokenName == "do":
             self.file_out.write("<doStatement>\n")
-            self.file_out.write("</doStatement>\n")
+            self.add_token("keyword","do")
             self.get_next_token()
+            # subroutine call
+            self.lookfor("type",None,"identifier","subroutineName, className \
+            or varName identifier in do statement")
+            self.parseSubroutineCall("do statement")
+            self.lookfor("name",";",None,"; after do statement")
+            self.file_out.write("</doStatement>\n")
             return True
         else:
             return False
@@ -491,8 +396,11 @@ class Parser:
         # 'return' expression? ';'
         if self.currentTokenName == "return":
             self.file_out.write("<returnStatement>\n")
-            self.file_out.write("</returnStatement>\n")
+            self.add_token("keyword","return")
             self.get_next_token()
+            self.parseExpression()
+            self.lookfor("name",";",None,"; after return statement")
+            self.file_out.write("</returnStatement>\n")
             return True
         else:
             return False
@@ -501,21 +409,77 @@ class Parser:
         # term (op term)*
         # op: '+', '-', '*', '/', '&', '|', '<', '>', '='
         self.file_out.write("<expression>\n")
-        self.file_out.write("</expression>\n")
+        if self.parseTerm():
+            while self.currentTokenName in ["+","-","*","/","&","|","<",">","="]:
+                self.add_token("symbol",self.currentTokenName)
+                self.get_next_token()
+                self.parseTerm()
+            self.file_out.write("</expression>\n")
+            return True
+        else:
+            self.file_out.write("</expression>\n")
+            return False
 
     def parseTerm(self):
         # integerConstant | stringConstant | keywordConstant | varName |
         # varName '[' expression ']' | subroutineCall | '(' expression ')' |
         # unaryOp term
+
         # keywordConstant: 'true' | 'false' | 'null' | 'this'
         # unaryOp: '-', '~'
+        # subroutineCall: subroutineName '(' expressionList ')' | (className |
+        # varName) '.' subroutineName '(' expressionList ')'
         self.file_out.write("<term>\n")
-        self.file_out.write("</term>\n")
+        if self.currentTokenType in ["integerConstant","stringConstant"]:
+            self.add_token(self.currentTokenType,self.currentTokenName)
+            self.get_next_token()
+            self.file_out.write("</term>\n")
+            return True
+        elif self.currentTokenName in ["true","false","null","this"]:
+            self.add_token("keyword",self.currentTokenName)
+            self.get_next_token()
+            self.file_out.write("</term>\n")
+            return True
+        elif self.currentTokenType == "identifier":
+            self.add_token("identifier",self.currentTokenName)
+            self.get_next_token()
+            if self.currentTokenName == "[":
+                self.add_token("symbol","[")
+                self.get_next_token()
+                self.parseExpression()
+                self.lookfor("name","]",None,"] after [ in term")
+            elif self.currentTokenName in ["(","."]:
+                self.parseSubroutineCall("term")
+            self.file_out.write("</term>\n")
+            return True
+        elif self.currentTokenName == "(":
+            self.add_token("symbol","("")
+            self.get_next_token()
+            self.parseExpression()
+            self.lookfor("name",")",None,"expected ) after expression in term")
+            self.file_out.write("</term>\n")
+            return True
+        elif self.currentTokenName in ["-","~"]:
+            self.add_token("symbol",self.currentTokenName)
+            self.get_next_token()
+            self.parseTerm()
+            return True
+        else:
+            self.file_out.write("</term>\n")
+            return False
 
     def parseExpressionList(self):
         # (expression (',' expression)*)?
         self.file_out.write("<expressionList>\n")
-        self.file_out.write("</expressionList>\n")
+        if parseExpression():
+            while self.currentTokenName == ",":
+                self.add_token("symbol",",")
+                self.get_next_token()
+                self.parseExpression()
+            return True
+        else:
+            self.file_out.write("</expressionList>\n")
+            return False
 
     def error_message(self,message):
         print("expected " + message + " token " + self.pointer)
