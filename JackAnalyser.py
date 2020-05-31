@@ -237,14 +237,14 @@ class Parser:
             self.parseParameterList()
             self.lookfor("name",")",None,") in subroutine declaration")
             # subroutineBody: '{' varDec* statements '}'
-            self.file_out.write("<subroutineBody>")
+            self.file_out.write("<subroutineBody>\n")
             self.lookfor("name","{",None,"{ in subroutine declaration")
             while True:
                 if not self.parseVarDec():
                     break
             self.parseStatements()
             self.lookfor("name","}",None,"} in subroutine declaration")
-            self.file_out.write("</subroutineBody>")
+            self.file_out.write("</subroutineBody>\n")
             self.file_out.write("</subroutineDec>\n")
             return True
         else:
@@ -423,15 +423,8 @@ class Parser:
         # op: '+', '-', '*', '/', '&', '|', '<', '>', '='
         self.file_out.write("<expression>\n")
         if self.parseTerm():
-            while self.currentTokenName in ["+","-","*","/","&","|","<",">","="]:
-                if self.currentTokenName == "<":
-                    self.add_token("symbol","&lt;")
-                elif self.currentTokenName == ">":
-                    self.add_token("symbol","&gt;")
-                if self.currentTokenName == "&":
-                    self.add_token("symbol","&amp;")
-                else:
-                    self.add_token("symbol",self.currentTokenName)
+            while self.currentTokenName in ["+","-","*","/","&amp;","|","&lt;","&gt;","="]:
+                self.add_token("symbol",self.currentTokenName)
                 self.get_next_token()
                 self.parseTerm()
             self.file_out.write("</expression>\n")
@@ -483,7 +476,7 @@ class Parser:
             self.add_token("symbol",self.currentTokenName)
             self.get_next_token()
             self.parseTerm()
-            self.file_out.write("</term>")
+            self.file_out.write("</term>\n")
             return True
         else:
             self.file_out.write("</term>\n")
@@ -500,7 +493,7 @@ class Parser:
                 self.add_token("symbol",",")
                 self.get_next_token()
                 self.parseExpression()
-            self.file_out.write("</expressionList>")
+            self.file_out.write("</expressionList>\n")
             return True
         else:
             self.file_out.write("</expressionList>\n")

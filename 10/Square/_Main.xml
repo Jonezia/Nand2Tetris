@@ -16,7 +16,8 @@
 <parameterList>
 </parameterList>
 <symbol>)</symbol>
-<subroutineBody><symbol>{</symbol>
+<subroutineBody>
+<symbol>{</symbol>
 <varDec>
 <keyword>var</keyword>
 <identifier>SquareGame</identifier>
@@ -69,7 +70,8 @@
 </returnStatement>
 </statements>
 <symbol>}</symbol>
-</subroutineBody></subroutineDec>
+</subroutineBody>
+</subroutineDec>
 <subroutineDec>
 <keyword>function</keyword>
 <keyword>void</keyword>
@@ -78,7 +80,8 @@
 <parameterList>
 </parameterList>
 <symbol>)</symbol>
-<subroutineBody><symbol>{</symbol>
+<subroutineBody>
+<symbol>{</symbol>
 <varDec>
 <keyword>var</keyword>
 <keyword>int</keyword>
@@ -180,7 +183,8 @@
 <term>
 <identifier>j</identifier>
 </term>
-</term></expression>
+</term>
+</expression>
 <symbol>)</symbol>
 </term>
 </expression>
@@ -203,7 +207,8 @@
 <term>
 <integerConstant>2</integerConstant>
 </term>
-</term></expression>
+</term>
+</expression>
 <symbol>)</symbol>
 </term>
 </expression>
@@ -233,6 +238,7 @@
 </returnStatement>
 </statements>
 <symbol>}</symbol>
-</subroutineBody></subroutineDec>
+</subroutineBody>
+</subroutineDec>
 <symbol>}</symbol>
 </class>

@@ -22,7 +22,8 @@
 <parameterList>
 </parameterList>
 <symbol>)</symbol>
-<subroutineBody><symbol>{</symbol>
+<subroutineBody>
+<symbol>{</symbol>
 <statements>
 <letStatement>
 <keyword>let</keyword>
@@ -52,7 +53,8 @@
 <integerConstant>30</integerConstant>
 </term>
 </expression>
-</expressionList><symbol>)</symbol>
+</expressionList>
+<symbol>)</symbol>
 </term>
 </expression>
 <symbol>;</symbol>
@@ -79,7 +81,8 @@
 </returnStatement>
 </statements>
 <symbol>}</symbol>
-</subroutineBody></subroutineDec>
+</subroutineBody>
+</subroutineDec>
 <subroutineDec>
 <keyword>method</keyword>
 <keyword>void</keyword>
@@ -88,7 +91,8 @@
 <parameterList>
 </parameterList>
 <symbol>)</symbol>
-<subroutineBody><symbol>{</symbol>
+<subroutineBody>
+<symbol>{</symbol>
 <statements>
 <doStatement>
 <keyword>do</keyword>
@@ -113,7 +117,8 @@
 <keyword>this</keyword>
 </term>
 </expression>
-</expressionList><symbol>)</symbol>
+</expressionList>
+<symbol>)</symbol>
 <symbol>;</symbol>
 </doStatement>
 <returnStatement>
@@ -122,7 +127,8 @@
 </returnStatement>
 </statements>
 <symbol>}</symbol>
-</subroutineBody></subroutineDec>
+</subroutineBody>
+</subroutineDec>
 <subroutineDec>
 <keyword>method</keyword>
 <keyword>void</keyword>
@@ -131,7 +137,8 @@
 <parameterList>
 </parameterList>
 <symbol>)</symbol>
-<subroutineBody><symbol>{</symbol>
+<subroutineBody>
+<symbol>{</symbol>
 <statements>
 <ifStatement>
 <keyword>if</keyword>
@@ -261,7 +268,8 @@
 <integerConstant>5</integerConstant>
 </term>
 </expression>
-</expressionList><symbol>)</symbol>
+</expressionList>
+<symbol>)</symbol>
 <symbol>;</symbol>
 </doStatement>
 <returnStatement>
@@ -270,7 +278,8 @@
 </returnStatement>
 </statements>
 <symbol>}</symbol>
-</subroutineBody></subroutineDec>
+</subroutineBody>
+</subroutineDec>
 <subroutineDec>
 <keyword>method</keyword>
 <keyword>void</keyword>
@@ -279,7 +288,8 @@
 <parameterList>
 </parameterList>
 <symbol>)</symbol>
-<subroutineBody><symbol>{</symbol>
+<subroutineBody>
+<symbol>{</symbol>
 <varDec>
 <keyword>var</keyword>
 <keyword>char</keyword>
@@ -313,7 +323,8 @@
 <term>
 <identifier>exit</identifier>
 </term>
-</term></expression>
+</term>
+</expression>
 <symbol>)</symbol>
 <symbol>{</symbol>
 <statements>
@@ -583,7 +594,8 @@
 </expression>
 <symbol>)</symbol>
 </term>
-</term></expression>
+</term>
+</expression>
 <symbol>)</symbol>
 <symbol>{</symbol>
 <statements>
@@ -625,6 +637,7 @@
 </returnStatement>
 </statements>
 <symbol>}</symbol>
-</subroutineBody></subroutineDec>
+</subroutineBody>
+</subroutineDec>
 <symbol>}</symbol>
 </class>
