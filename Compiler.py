@@ -113,6 +113,7 @@ class Parser:
         self.symbolTable = SymbolTable()
         self.currentTokenType = None
         self.currentTokenName = None
+        self.currentClass = None
         self.tokens = tokens
         self.get_next_token()
 
@@ -143,6 +144,7 @@ class Parser:
             self.file_out.write("<class>\n")
             self.add_token("keyword","class")
             self.get_next_token()
+            self.currentClass = self.currentTokenName
             self.lookfor("type",None,"identifier","className identifier in " +
             "class declaration")
             self.lookfor("name","{",None,"{ in class declaration")
@@ -162,11 +164,13 @@ class Parser:
     def parseClassVarDec(self):
         # ('static' | 'field') type varName (',' varName)* ';'
         if self.currentTokenName in ["static","field"]:
+            kind = self.currentTokenName
             self.file_out.write("<classVarDec>\n")
             self.add_token("keyword",self.currentTokenName)
             self.get_next_token()
             # type: 'int' | 'char' | 'boolean' | className
             # className: identifier
+            type = self.currentTokenName
             if self.currentTokenType == "identifier":
                 self.add_token("identifier",self.currentTokenName)
             elif self.currentTokenName in ["int","char","boolean"]:
@@ -175,12 +179,14 @@ class Parser:
                 self.error_message("Expected type in class variable declaration")
             self.get_next_token()
             # varName: identifier
+            self.symbolTable.define(self.currentTokenName,type,kind)
             self.lookfor("type",None,"identifier","variable name identifier " +
             "in class variable declaration")
             # (',' varName)* ';'
             while self.currentTokenName == ",":
                 self.add_token("symbol",",")
                 self.get_next_token()
+                self.symbolTable.define(self.currentTokenName,type,kind)
                 self.lookfor("type",None,"identifier","variable name " +
                 "identifier after comma in class variable declaration")
             self.lookfor("name",";",None,"; after class variable declaration")
@@ -212,6 +218,8 @@ class Parser:
         # '(' parameterList ')' subroutineBody
         if self.currentTokenName in ["constructor","function","method"]:
             self.file_out.write("<subroutineDec>\n")
+            self.symbolTable.startSubroutine()
+            self.symbolTable.define("this",self.currentClass,"arg")
             self.add_token("keyword",self.currentTokenName)
             self.get_next_token()
             # ('void' | type)
@@ -244,13 +252,17 @@ class Parser:
         if self.currentTokenType == "identifier" or self.currentTokenName \
         in ["int","char","boolean"]:
             # (type varName) varName: identifier
+            type = self.currentTokenName
             self.lookfortype(False,"in parameter list")
+            self.symbolTable.define(self.currentTokenName,type,"arg")
             self.lookfor("type",None,"identifier","varName identifier in parameter list")
             # (',' type varName)* varName: identifier
             while self.currentTokenName == ",":
                 self.add_token("symbol",",")
                 self.get_next_token()
+                type = self.currentTokenName
                 self.lookfortype(False,"in parameter list after ,")
+                self.symbolTable.define(self.currentTokenName,type,"arg")
                 self.lookfor("type",None,"identifier","varName identifier " +
                 "after comma in parameter list")
         self.file_out.write("</parameterList>\n")
@@ -261,12 +273,15 @@ class Parser:
             self.file_out.write("<varDec>\n")
             self.add_token("keyword","var")
             self.get_next_token()
+            type = self.currentTokenName
             self.lookfortype(False,"in variable declaration")
+            self.symbolTable.define(self.currentTokenName,type,"var")
             self.lookfor("type",None,"identifier","varName identifer in " +
             "variable declaration")
             while self.currentTokenName == ",":
                 self.add_token("symbol",",")
                 self.get_next_token()
+                self.symbolTable.define(self.currentTokenName,type,"var")
                 self.lookfor("type",None,"identifier","varName identifier " +
                 "after comma in variable declaration")
             self.lookfor("name",";",None,"semicolon after variable declaration")
@@ -494,7 +509,7 @@ class Parser:
         self.file_out.write(f"<{tokenType}>{tokenName}</{tokenType}>\n")
 
 class SymbolTable:
-    def__init__(self):
+    def __init__(self):
         self.fieldCount = 0
         self.staticCount = 0
         self.argCount = 0
@@ -503,8 +518,8 @@ class SymbolTable:
         self.subroutineSymbolTable = {}
 
     def startSubroutine(self):
-        self.subroutineArgCount = 0
-        self.subroutineVarCount = 0
+        self.argCount = 0
+        self.varCount = 0
         self.subroutineSymbolTable = {}
 
     def define(self,name,type,kind):
@@ -512,7 +527,7 @@ class SymbolTable:
             self.classSymbolTable[name] = [type,kind,self.getCount(kind)]
         if kind in ["arg","var"]:
             self.subroutineSymbolTable[name] = [type,kind,self.getCount(kind)]
-        self.getCount(kind) = self.getCount(kind) + 1
+        self.incrementCount(kind)
 
     def get(self,name):
         return self.subroutineSymbolTable[name]
@@ -526,6 +541,16 @@ class SymbolTable:
             return self.argCount
         elif kind == "var":
             return self.varCount
+
+    def incrementCount(self,kind):
+        if kind == "field":
+            self.fieldCount += 1
+        elif kind == "static":
+            self.staticCount += 1
+        elif kind == "arg":
+            self.argCount += 1
+        elif kind == "var":
+            self.varCount += 1
 
 # Main
 directory = sys.argv[1]
