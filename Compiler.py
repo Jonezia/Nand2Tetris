@@ -21,6 +21,11 @@ class Reader:
         self.file_out.write("")
         # Open file again, this time appending lines
         self.file_out = open(directory + "/_" + self.filename + ".xml","a")
+        # Set up vm output file
+        self.vm_out = open(directory + "/_" + self.filename + ".vm","w")
+        self.vm_out.write("")
+        # Open file again, this time appending lines
+        self.vm_out = open(directory + "/_" + self.filename + ".vm","a")
         self.tokenizer = Tokenizer(self.tokens_out)
 
     def run(self):
@@ -46,7 +51,7 @@ class Reader:
         self.file_in.close()
         self.tokens_out.write("</tokens>")
         self.tokens_out.close()
-        self.parser = Parser(self.file_out,self.tokenizer.tokens)
+        self.parser = Parser(self.file_out,self.vm_out,self.tokenizer.tokens)
         self.parser.parseClass()
 
 
@@ -107,8 +112,9 @@ class Tokenizer:
 
 class Parser:
     # Parses tokens into xml tree
-    def __init__(self,file_out,tokens):
+    def __init__(self,file_out,vm_out,tokens):
         self.file_out = file_out
+        self.vm_out = vm_out
         self.pointer = 0
         self.symbolTable = SymbolTable()
         self.currentTokenType = None
@@ -321,14 +327,17 @@ class Parser:
             self.file_out.write("<letStatement>\n")
             self.add_token("keyword","let")
             self.get_next_token()
+            leftoperand = self.currentTokenName
             self.lookfor("type",None,"identifier","varName identifier after let")
             if self.currentTokenName == "[":
                 self.add_token("symbol","[")
                 self.get_next_token()
+                # ADD CODE TO HANDLE ARRAY
                 self.parseExpression()
                 self.lookfor("name","]",None,"] after [ in let statement]")
             self.lookfor("name","=",None,"= in let statement")
             self.parseExpression()
+            self.vm_out.write("pop " + self.symbolTable.getVM(leftoperand) + "\n")
             self.lookfor("name",";",None,"; after let statement")
             self.file_out.write("</letStatement>\n")
             return True
@@ -525,12 +534,29 @@ class SymbolTable:
     def define(self,name,type,kind):
         if kind in ["field","static"]:
             self.classSymbolTable[name] = [type,kind,self.getCount(kind)]
-        if kind in ["arg","var"]:
+        elif kind in ["arg","var"]:
             self.subroutineSymbolTable[name] = [type,kind,self.getCount(kind)]
         self.incrementCount(kind)
 
-    def get(self,name):
-        return self.subroutineSymbolTable[name]
+    def getEntry(self,name):
+        if name in self.subroutineSymbolTable:
+            return self.subroutineSymbolTable[name]
+        elif name in self.classSymbolTable:
+            return self.classSymbolTable[name]
+        else:
+            print("identifier " + name + " not found in symbol table")
+
+    def getVM(self,name):
+        var = self.getEntry(name)
+        if var[1] == "field":
+            kind = "this"
+        elif var[1] == "static":
+            kind = "static"
+        elif var[1] == "arg":
+            kind = "argument"
+        elif var[1] == "var":
+            kind = "local"
+        return(kind + " " + str(var[2]))
 
     def getCount(self,kind):
         if kind == "field":
