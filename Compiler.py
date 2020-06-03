@@ -334,12 +334,12 @@ class Parser:
                 self.get_next_token()
                 self.parseExpression()
                 self.vm_out.write("push " + self.symbolTable.getVM(leftoperand) + "\n")
-                self.vm_out.write("add")
+                self.vm_out.write("add" + "\n")
                 self.lookfor("name","]",None,"] after [ in let statement]")
                 self.lookfor("name","=",None,"= in let statement")
                 self.parseExpression()
-                self.vm_out.write("pop temp 0")
-                self.vm_out.write("pop pointer 1")
+                self.vm_out.write("pop temp 0" + "\n")
+                self.vm_out.write("pop pointer 1" + "\n")
             else:
                 self.lookfor("name","=",None,"= in let statement")
                 self.parseExpression()
@@ -447,12 +447,12 @@ class Parser:
                 self.get_next_token()
                 self.parseTerm()
                 if operator == "*":
-                    self.vm_out.write("call Math.multiply 2")
+                    self.vm_out.write("call Math.multiply 2" + "\n")
                 elif operator == "/":
-                    self.vm_out.write("call Math.divide 2")
+                    self.vm_out.write("call Math.divide 2" + "\n")
                 else:
                     op_dict = {'+':'add','-':'sub','=':'eq','>':'gt','<':'lt','&':'and','|':'or'}
-                    self.vm_out.write(op_dict[operator])
+                    self.vm_out.write(op_dict[operator] + "\n")
             self.file_out.write("</expression>\n")
             return True
         else:
@@ -470,7 +470,7 @@ class Parser:
         # varName) '.' subroutineName '(' expressionList ')'
         self.file_out.write("<term>\n")
         if self.currentTokenType == "integerConstant":
-            self.vm_out.write("push constant " + self.currentTokenName)
+            self.vm_out.write("push constant " + self.currentTokenName + "\n")
             self.add_token(self.currentTokenType,self.currentTokenName)
             self.get_next_token()
             self.file_out.write("</term>\n")
@@ -509,9 +509,9 @@ class Parser:
                 self.parseExpression()
                 self.lookfor("name","]",None,"] after [ in term")
                 self.vm_out.write("push " + currentVM + "\n")
-                self.vm_out.write("add")
-                self.vm_out.write("pop pointer 1")
-                self.vm_out.write("push that 0")
+                self.vm_out.write("add" + "\n")
+                self.vm_out.write("pop pointer 1" + "\n")
+                self.vm_out.write("push that 0" + "\n")
             elif self.currentTokenName in ["(","."]:
                 self.parseSubroutineCall("term")
             else:
@@ -528,9 +528,9 @@ class Parser:
         elif self.currentTokenName in ["-","~"]:
             self.vm_out.write("push " + currentVM + "\n")
             if self.currentTokenName == "-":
-                self.vm_out.write("neg")
+                self.vm_out.write("neg" + "\n")
             elif self.currentTokenName == "~":
-                self.vm_out.write("not")
+                self.vm_out.write("not" + "\n")
             self.add_token("symbol",self.currentTokenName)
             self.get_next_token()
             self.parseTerm()
