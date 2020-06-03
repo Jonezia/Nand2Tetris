@@ -117,10 +117,12 @@ class Parser:
         self.vm_out = vm_out
         self.pointer = 0
         self.subroutine_args = 0
+        self.label_number = 0
         self.symbolTable = SymbolTable()
         self.currentTokenType = None
         self.currentTokenName = None
         self.currentClass = None
+        self.currentSubroutine = None
         self.tokens = tokens
         self.get_next_token()
 
@@ -223,9 +225,11 @@ class Parser:
     def parseSubroutineDec(self):
         # ('constructor' | 'function' | 'method') ('void' | type) subroutineName
         # '(' parameterList ')' subroutineBody
-        if self.currentTokenName in ["constructor","function","method"]:
+        functionType = self.currentTokenName
+        if functionType in ["constructor","function","method"]:
             self.file_out.write("<subroutineDec>\n")
             self.symbolTable.startSubroutine()
+            self.label_number = 0
             self.symbolTable.define("this",self.currentClass,"arg")
             self.add_token("keyword",self.currentTokenName)
             self.get_next_token()
@@ -233,8 +237,13 @@ class Parser:
             # type: 'int' | 'char' | 'boolean' | className className: identifier
             self.lookfortype(True,"in subroutine declaration")
             # subroutineName: identifier
+            self.currentSubroutine = self.currentTokenName
             self.lookfor("type",None,"identifier","subroutine name " +
             "identifier in subroutine declaration")
+
+            self.vm_out.write("function " + self.currentClass + "." + self.currentSubroutine
+            + " " + str(self.symbolTable.varCount + self.symbolTable.staticCount) + "\n")
+
             # '(' parameterList ')'
             self.lookfor("name","(",None,"( in subroutine declaration")
             self.parseParameterList()
@@ -247,6 +256,15 @@ class Parser:
                     break
             self.parseStatements()
             self.lookfor("name","}",None,"} in subroutine declaration")
+
+            if functionType == "constructor":
+                self.vm_out.write("push constant " + self.symbolTable.fieldCount + "\n")
+                self.vm_out.write("call Memory.alloc 1" + "\n")
+                self.vm_out.write("pop pointer 0" + "\n")
+            elif functionType == "method":
+                self.vm_out.write("push argument 0" + "\n")
+                self.vm_out.write("pop pointer 0" + "\n")
+
             self.file_out.write("</subroutineBody>\n")
             self.file_out.write("</subroutineDec>\n")
             return True
@@ -351,8 +369,17 @@ class Parser:
         else:
             return False
 
+    def get_labels(self):
+        L1 = self.currentClass + "." + self.currentSubroutine + "." + \
+            str(self.label_number) + ".1"
+        L2 = self.currentClass + "." + self.currentSubroutine + "." + \
+            str(self.label_number) + ".2"
+        self.label_number += 1
+        return L1, L2
+
     def parseIfStatement(self):
         # 'if' '(' expression ')' '{' statements '}' ('else' '{' statements '}')?
+        L1, L2 = self.get_labels()
         if self.currentTokenName == "if":
             self.file_out.write("<ifStatement>\n")
             self.add_token("keyword","if")
@@ -360,8 +387,12 @@ class Parser:
             self.lookfor("name","(",None,"( in if statement)")
             self.parseExpression()
             self.lookfor("name",")",None,") in if statement")
+            self.vm_out.write("not" + "\n")
+            self.vm_out.write("if-goto " + L1 + "\n")
             self.lookfor("name","{",None,"{ in if statement")
             self.parseStatements()
+            self.vm_out.write("goto " + L2 + "\n")
+            self.vm_out.write("label " + L1 + "\n")
             self.lookfor("name","}",None,"} in if statement")
             if self.currentTokenName == "else":
                 self.add_token("keyword","else")
@@ -369,6 +400,7 @@ class Parser:
                 self.lookfor("name","{",None,"{ after else in if statement")
                 self.parseStatements()
                 self.lookfor("name","}",None,"} after else in if statement")
+            self.vm_out.write("label " + L2 + "\n")
             self.file_out.write("</ifStatement>\n")
             return True
         else:
@@ -376,15 +408,21 @@ class Parser:
 
     def parseWhileStatement(self):
         # 'while' '(' expression ')' '{' statements '}'
+        L1, L2 = self.get_labels()
         if self.currentTokenName == "while":
             self.file_out.write("<whileStatement>\n")
             self.add_token("keyword","while")
             self.get_next_token()
+            self.vm_out.write("label " + L1 + "\n")
             self.lookfor("name","(",None,"( in while statement")
             self.parseExpression()
+            self.vm_out.write("not" + "\n")
+            self.vm_out.write("if-goto " + L2 + "\n")
             self.lookfor("name",")",None,") in while statement")
             self.lookfor("name","{",None,"{ in while statement")
             self.parseStatements()
+            self.vm_out.write("goto " + L1 + "\n")
+            self.vm_out.write("label " + L2 + "\n")
             self.lookfor("name","}",None,"} in while statement")
             self.file_out.write("</whileStatement>\n")
             return True
@@ -441,6 +479,7 @@ class Parser:
 
     def parseReturnStatement(self):
         # 'return' expression? ';'
+        void = True
         if self.currentTokenName == "return":
             self.file_out.write("<returnStatement>\n")
             self.add_token("keyword","return")
@@ -448,7 +487,11 @@ class Parser:
             if self.currentTokenType in ["integerConstant","stringConstant", \
             "identifier"] or self.currentTokenName in ["true","false","null", \
             "this","(","-","~"]:
+                void = False
                 self.parseExpression()
+            if void:
+                self.vm_out.write("push constant 0" + "\n")
+            self.vm_out.write("return" + "\n")
             self.lookfor("name",";",None,"; after return statement")
             self.file_out.write("</returnStatement>\n")
             return True
