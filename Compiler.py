@@ -116,6 +116,7 @@ class Parser:
         self.file_out = file_out
         self.vm_out = vm_out
         self.pointer = 0
+        self.subroutine_args = 0
         self.symbolTable = SymbolTable()
         self.currentTokenType = None
         self.currentTokenName = None
@@ -390,16 +391,33 @@ class Parser:
         else:
             return False
 
-    def parseSubroutineCall(self,location):
+    def parseSubroutineCall(self,location,name=None):
         # helper function for parseDoStatement and parseTerm
+        self.subroutine_args = 0
         if self.currentTokenName == ".":
+            # className or varName
+            if self.symbolTable.getEntry(name):
+                # varName
+                type, kind, number = self.symbolTable.get(name)
+                self.vm_out.write("push " + kind + " " + number)
+                self.subroutine_args += 1
+                call_prefix = type
+            else:
+                # className
+                call_prefix = name
             self.add_token("symbol",".")
             self.get_next_token()
+            call_name = call_prefix + "." + self.currentTokenName
             self.lookfor("type",None,"identifier","subroutineName identifier " +
             "after . in do statement")
+        else:
+            # subroutineName
+            self.vm_out.write("push pointer 0")
+            self.subroutine_args += 1
         self.lookfor("name","(",None,"( in " + location)
         self.parseExpressionList()
         self.lookfor("name",")",None,") after ( in " + location)
+        self.vm_out.write("call " + call_name + " " + str(self.subroutine_args) + "\n")
 
     def parseDoStatement(self):
         # 'do' subroutineCall ';'
@@ -411,9 +429,10 @@ class Parser:
             self.add_token("keyword","do")
             self.get_next_token()
             # subroutine call
+            name = self.currentTokenName
             self.lookfor("type",None,"identifier","subroutineName, className " +
             "or varName identifier in do statement")
-            self.parseSubroutineCall("do statement")
+            self.parseSubroutineCall("do statement",name)
             self.lookfor("name",";",None,"; after do statement")
             self.file_out.write("</doStatement>\n")
             return True
@@ -451,7 +470,8 @@ class Parser:
                 elif operator == "/":
                     self.vm_out.write("call Math.divide 2" + "\n")
                 else:
-                    op_dict = {'+':'add','-':'sub','=':'eq','>':'gt','<':'lt','&':'and','|':'or'}
+                    op_dict = {'+':'add','-':'sub','=':'eq','&gt;':'gt',
+                    '&lt;':'lt','&amp':'and','|':'or'}
                     self.vm_out.write(op_dict[operator] + "\n")
             self.file_out.write("</expression>\n")
             return True
@@ -477,10 +497,10 @@ class Parser:
             return True
         elif self.currentTokenType == "stringConstant":
             string = self.currentTokenName
-            self.vm_out.write("push constant " + len(string) + "\n")
+            self.vm_out.write("push constant " + str(len(string)) + "\n")
             self.vm_out.write("call String.new 1" + "\n")
             for i in string:
-                self.vm_out.write("push constant " + ord(i) + "\n")
+                self.vm_out.write("push constant " + str(ord(i)) + "\n")
                 self.vm_out.write("call String.appendChar 2" + "\n")
             self.add_token(self.currentTokenType,self.currentTokenName)
             self.get_next_token()
@@ -500,6 +520,7 @@ class Parser:
             self.file_out.write("</term>\n")
             return True
         elif self.currentTokenType == "identifier":
+            currentName = self.currentTokenName
             currentVM = self.symbolTable.getVM(self.currentTokenName)
             self.add_token("identifier",self.currentTokenName)
             self.get_next_token()
@@ -513,7 +534,7 @@ class Parser:
                 self.vm_out.write("pop pointer 1" + "\n")
                 self.vm_out.write("push that 0" + "\n")
             elif self.currentTokenName in ["(","."]:
-                self.parseSubroutineCall("term")
+                self.parseSubroutineCall("term",currentName)
             else:
                 self.vm_out.write("push " + currentVM + "\n")
             self.file_out.write("</term>\n")
@@ -547,10 +568,12 @@ class Parser:
         "identifier"] or self.currentTokenName in ["true","false","null", \
         "this","(","-","~"]:
             self.parseExpression()
+            self.subroutine_args += 1
             while self.currentTokenName == ",":
                 self.add_token("symbol",",")
                 self.get_next_token()
                 self.parseExpression()
+                self.subroutine_args += 1
             self.file_out.write("</expressionList>\n")
             return True
         else:
@@ -590,10 +613,12 @@ class SymbolTable:
         elif name in self.classSymbolTable:
             return self.classSymbolTable[name]
         else:
-            print("identifier " + name + " not found in symbol table")
+            return False
 
     def getVM(self,name):
         var = self.getEntry(name)
+        if not var:
+            return False
         if var[1] == "field":
             kind = "this"
         elif var[1] == "static":
