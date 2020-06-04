@@ -111,7 +111,7 @@ class Tokenizer:
         self.tokens.append([tokenType,tokenName])
 
 class Parser:
-    # Parses tokens into xml tree
+    # Parses tokens
     def __init__(self,file_out,vm_out,tokens):
         self.file_out = file_out
         self.vm_out = vm_out
@@ -229,7 +229,6 @@ class Parser:
         if functionType in ["constructor","function","method"]:
             self.file_out.write("<subroutineDec>\n")
             self.symbolTable.startSubroutine()
-            self.label_number = 0
             self.symbolTable.define("this",self.currentClass,"arg")
             self.add_token("keyword",self.currentTokenName)
             self.get_next_token()
@@ -241,12 +240,10 @@ class Parser:
             self.lookfor("type",None,"identifier","subroutine name " +
             "identifier in subroutine declaration")
 
-            self.vm_out.write("function " + self.currentClass + "." + self.currentSubroutine
-            + " " + str(self.symbolTable.varCount + self.symbolTable.staticCount) + "\n")
-
             # '(' parameterList ')'
             self.lookfor("name","(",None,"( in subroutine declaration")
             self.parseParameterList()
+
             self.lookfor("name",")",None,") in subroutine declaration")
             # subroutineBody: '{' varDec* statements '}'
             self.file_out.write("<subroutineBody>\n")
@@ -254,11 +251,13 @@ class Parser:
             while True:
                 if not self.parseVarDec():
                     break
+            self.vm_out.write("function " + self.currentClass + "." + self.currentSubroutine
+            + " " + str(self.symbolTable.varCount + self.symbolTable.staticCount) + "\n")
             self.parseStatements()
             self.lookfor("name","}",None,"} in subroutine declaration")
 
             if functionType == "constructor":
-                self.vm_out.write("push constant " + self.symbolTable.fieldCount + "\n")
+                self.vm_out.write("push constant " + str(self.symbolTable.fieldCount) + "\n")
                 self.vm_out.write("call Memory.alloc 1" + "\n")
                 self.vm_out.write("pop pointer 0" + "\n")
             elif functionType == "method":
@@ -354,11 +353,13 @@ class Parser:
                 self.parseExpression()
                 self.vm_out.write("push " + self.symbolTable.getVM(leftoperand) + "\n")
                 self.vm_out.write("add" + "\n")
+                self.vm_out.write("pop temp 0" + "\n")
                 self.lookfor("name","]",None,"] after [ in let statement]")
                 self.lookfor("name","=",None,"= in let statement")
                 self.parseExpression()
-                self.vm_out.write("pop temp 0" + "\n")
+                self.vm_out.write("push temp 0" + "\n")
                 self.vm_out.write("pop pointer 1" + "\n")
+                self.vm_out.write("pop that 0" + "\n")
             else:
                 self.lookfor("name","=",None,"= in let statement")
                 self.parseExpression()
@@ -370,12 +371,12 @@ class Parser:
             return False
 
     def get_labels(self):
-        L1 = self.currentClass + "." + self.currentSubroutine + "." + \
+        label1 = self.currentClass + "." + self.currentSubroutine + "." + \
             str(self.label_number) + ".1"
-        L2 = self.currentClass + "." + self.currentSubroutine + "." + \
+        label2 = self.currentClass + "." + self.currentSubroutine + "." + \
             str(self.label_number) + ".2"
         self.label_number += 1
-        return L1, L2
+        return label1, label2
 
     def parseIfStatement(self):
         # 'if' '(' expression ')' '{' statements '}' ('else' '{' statements '}')?
@@ -436,8 +437,8 @@ class Parser:
             # className or varName
             if self.symbolTable.getEntry(name):
                 # varName
-                type, kind, number = self.symbolTable.get(name)
-                self.vm_out.write("push " + kind + " " + number)
+                type, kind, number = self.symbolTable.getEntry(name)
+                self.vm_out.write("push " + self.symbolTable.getVM(name) + "\n")
                 self.subroutine_args += 1
                 call_prefix = type
             else:
@@ -450,7 +451,8 @@ class Parser:
             "after . in do statement")
         else:
             # subroutineName
-            self.vm_out.write("push pointer 0")
+            call_name = name
+            self.vm_out.write("push pointer 0" + "\n")
             self.subroutine_args += 1
         self.lookfor("name","(",None,"( in " + location)
         self.parseExpressionList()
@@ -471,6 +473,7 @@ class Parser:
             self.lookfor("type",None,"identifier","subroutineName, className " +
             "or varName identifier in do statement")
             self.parseSubroutineCall("do statement",name)
+            self.vm_out.write("pop temp 0" + "\n")
             self.lookfor("name",";",None,"; after do statement")
             self.file_out.write("</doStatement>\n")
             return True
@@ -514,7 +517,7 @@ class Parser:
                     self.vm_out.write("call Math.divide 2" + "\n")
                 else:
                     op_dict = {'+':'add','-':'sub','=':'eq','&gt;':'gt',
-                    '&lt;':'lt','&amp':'and','|':'or'}
+                    '&lt;':'lt','&amp;':'and','|':'or'}
                     self.vm_out.write(op_dict[operator] + "\n")
             self.file_out.write("</expression>\n")
             return True
@@ -551,7 +554,8 @@ class Parser:
             return True
         elif self.currentTokenName in ["true","false","null","this"]:
             if self.currentTokenName == "true":
-                self.vm_out.write("push constant -1" + "\n")
+                self.vm_out.write("push constant 1" + "\n")
+                self.vm_out.write("neg" + "\n")
             elif self.currentTokenName == "false":
                 self.vm_out.write("push constant 0" + "\n")
             elif self.currentTokenName == "null":
@@ -590,14 +594,14 @@ class Parser:
             self.file_out.write("</term>\n")
             return True
         elif self.currentTokenName in ["-","~"]:
-            self.vm_out.write("push " + currentVM + "\n")
-            if self.currentTokenName == "-":
-                self.vm_out.write("neg" + "\n")
-            elif self.currentTokenName == "~":
-                self.vm_out.write("not" + "\n")
+            symbol = self.currentTokenName
             self.add_token("symbol",self.currentTokenName)
             self.get_next_token()
             self.parseTerm()
+            if symbol == "-":
+                self.vm_out.write("neg" + "\n")
+            elif symbol == "~":
+                self.vm_out.write("not" + "\n")
             self.file_out.write("</term>\n")
             return True
         else:
