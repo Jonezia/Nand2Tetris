@@ -1,6 +1,4 @@
 function Sys.init 0
-call Array.init 0
-pop temp 0
 call Keyboard.init 0
 pop temp 0
 call Math.init 0
@@ -10,8 +8,6 @@ pop temp 0
 call Output.init 0
 pop temp 0
 call Screen.init 0
-pop temp 0
-call String.init 0
 pop temp 0
 call Main.main 0
 pop temp 0
@@ -29,11 +25,29 @@ goto WHILE_EXP0
 label WHILE_END0
 push constant 0
 return
-function Sys.wait 2
+function Sys.wait 11
 push constant 0
 pop local 0
 push constant 0
 pop local 1
+push constant 0
+pop local 2
+push constant 0
+pop local 3
+push constant 0
+pop local 4
+push constant 0
+pop local 5
+push constant 0
+pop local 6
+push constant 0
+pop local 7
+push constant 0
+pop local 8
+push constant 0
+pop local 9
+push constant 0
+pop local 10
 label WHILE_EXP0
 push local 0
 push argument 0
@@ -46,7 +60,7 @@ add
 pop local 0
 label WHILE_EXP1
 push local 1
-push constant 350
+push constant 15000
 lt
 not
 if-goto WHILE_END1
@@ -54,6 +68,114 @@ push local 1
 push constant 1
 add
 pop local 1
+label WHILE_EXP2
+push local 2
+push constant 15000
+lt
+not
+if-goto WHILE_END2
+push local 2
+push constant 1
+add
+pop local 2
+label WHILE_EXP3
+push local 3
+push constant 15000
+lt
+not
+if-goto WHILE_END3
+push local 3
+push constant 1
+add
+pop local 3
+label WHILE_EXP4
+push local 4
+push constant 15000
+lt
+not
+if-goto WHILE_END4
+push local 4
+push constant 1
+add
+pop local 4
+label WHILE_EXP5
+push local 5
+push constant 15000
+lt
+not
+if-goto WHILE_END5
+push local 5
+push constant 1
+add
+pop local 5
+label WHILE_EXP6
+push local 6
+push constant 15000
+lt
+not
+if-goto WHILE_END6
+push local 6
+push constant 1
+add
+pop local 6
+label WHILE_EXP7
+push local 7
+push constant 15000
+lt
+not
+if-goto WHILE_END7
+push local 7
+push constant 1
+add
+pop local 7
+label WHILE_EXP8
+push local 8
+push constant 15000
+lt
+not
+if-goto WHILE_END8
+push local 8
+push constant 1
+add
+pop local 8
+label WHILE_EXP9
+push local 9
+push constant 15000
+lt
+not
+if-goto WHILE_END9
+push local 9
+push constant 1
+add
+pop local 9
+label WHILE_EXP10
+push local 10
+push constant 15000
+lt
+not
+if-goto WHILE_END10
+push local 10
+push constant 1
+add
+pop local 10
+goto WHILE_EXP10
+label WHILE_END10
+goto WHILE_EXP9
+label WHILE_END9
+goto WHILE_EXP8
+label WHILE_END8
+goto WHILE_EXP7
+label WHILE_END7
+goto WHILE_EXP6
+label WHILE_END6
+goto WHILE_EXP5
+label WHILE_END5
+goto WHILE_EXP4
+label WHILE_END4
+goto WHILE_EXP3
+label WHILE_END3
+goto WHILE_EXP2
+label WHILE_END2
 goto WHILE_EXP1
 label WHILE_END1
 goto WHILE_EXP0

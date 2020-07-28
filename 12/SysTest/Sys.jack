@@ -10,13 +10,11 @@ class Sys {
 
     /** Performs all the initializations required by the OS. */
     function void init() {
-        do Array.init();
         do Keyboard.init();
         do Math.init();
         do Memory.init();
         do Output.init();
         do Screen.init();
-        do String.init();
         do Main.main();
         do Sys.halt();
         return;
@@ -30,15 +28,52 @@ class Sys {
 
     /** Waits approximately duration milliseconds and returns.  */
     function void wait(int duration) {
-        var int i,j;
+        var int i, j, k, m, n, x, y, z, xx, yy, zz;
 
-        /** computation callibrated to stall for duration milliseconds */
+        /** computation callibrated to stall for duration milliseconds
+        (my computer happens to be quite fast) */
         let i = 0;
         let j = 0;
+        let k = 0;
+        let m = 0;
+        let n = 0;
+        let x = 0;
+        let y = 0;
+        let z = 0;
+        let xx = 0;
+        let yy = 0;
+        let zz = 0;
         while (i < duration) {
             let i = i + 1;
-            while (j < 300) {
+            while (j < 15000) {
                 let j = j + 1;
+                while (k < 15000) {
+                    let k = k + 1;
+                    while (m < 15000) {
+                        let m = m + 1;
+                        while (n < 15000) {
+                            let n = n + 1;
+                            while (x < 15000) {
+                                let x = x + 1;
+                                while (y < 15000) {
+                                    let y = y + 1;
+                                    while (z < 15000) {
+                                        let z = z + 1;
+                                        while (xx < 15000) {
+                                            let xx = xx + 1;
+                                            while (yy < 15000) {
+                                                let yy = yy + 1;
+                                                while (zz < 15000) {
+                                                    let zz = zz + 1;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
         return;
