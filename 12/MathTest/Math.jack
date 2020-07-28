@@ -1,0 +1,162 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/Math.jack
+
+/**
+ * A library of commonly used mathematical functions.
+ * Note: Jack compilers implement multiplication and division using OS method calls.
+ */
+class Math {
+
+    static Array powersOfTwo;
+
+    /** Initializes the library. */
+    function void init() {
+      var int i, n;
+
+      let i = 0;
+      let n = 1;
+      let powersOfTwo = Array.new(16);
+      while(i < 16) {
+          let powersOfTwo[i] = n;
+          let n = n + n;
+          let i = i + 1;
+      }
+
+      return;
+    }
+
+
+    /** Returns the absolute value of x. */
+    function int abs(int x) {
+        if (x < 0) {
+            return -x;
+        }
+        return x;
+    }
+
+
+    /** Returns the product of x and y.
+     *  When a Jack compiler detects the multiplication operator '*' in the
+     *  program's code, it handles it by invoking this method. In other words,
+     *  the Jack expressions x*y and multiply(x,y) return the same value.
+     */
+    function int multiply(int x, int y) {
+        var int sum, shiftedX, j, flip;
+
+        if ((x = 0) | (y = 0)) {
+            return 0;
+        }
+
+        let flip = 0;
+        if (x < 0) {
+            let x = -x;
+            let flip = flip + 1;
+        }
+        if (y < 0) {
+            let y = -y;
+            let flip = flip + 1;
+        }
+
+        let sum = 0;
+        let shiftedX = x;
+        let j = 1;
+        while (y > 0) {
+            if ((y & j) = j) {
+                let y = y - j;
+                let sum = sum + shiftedX;
+            }
+            let shiftedX = shiftedX + shiftedX;
+            let j = j + j;
+        }
+
+        if (flip = 1) {
+            let sum = -sum;
+        }
+
+        return sum;
+    }
+
+
+    /** Returns the integer part of x/y.
+     *  When a Jack compiler detects the multiplication operator '/' in the
+     *  program's code, it handles it by invoking this method. In other words,
+     *  the Jack expressions x/y and divide(x,y) return the same value.
+     */
+    function int divide(int x, int y) {
+        var int q, twoY, res, flip;
+
+        let flip = 0;
+        if (x < 0) {
+            let x = -x;
+            let flip = flip + 1;
+        }
+        if (y < 0) {
+            let y = -y;
+            let flip = flip + 1;
+        }
+
+        if (y > x) {
+            return 0;
+        }
+
+        let twoY = y + y;
+        let q = x / twoY;
+        if (x-(q*twoY) < y) {
+            let res = q + q;
+        }
+        else {
+            let res = q + q + 1;
+        }
+
+        if (flip = 1) {
+            return -res;
+        } else {
+            return res;
+        }
+    }
+
+
+    /** Returns the integer part of the square root of x. */
+    function int sqrt(int x) {
+        var int y, j, temp, tempsquared;
+
+        let j = 0;
+        let t = 0;
+        while ( (t < 7) & (j = t) ) {
+            if ( x > powersOfTwo[j+j+2] ) {
+                let j = j + 1;
+            }
+        }
+
+        let y = 0;
+        while (j > -1) {
+            let temp = y + powersOfTwo[j];
+            let tempsquared = temp*temp;
+            if ((~(tempsquared > x)) & (tempsquared > 0)) {
+                let y = temp;
+            }
+            let j = j - 1;
+        }
+        return y;
+    }
+
+
+    /** Returns the greater number. */
+    function int max(int a, int b) {
+        if (a > b) {
+            return a;
+        }
+        return b;
+    }
+
+
+    /** Returns the smaller number. */
+    function int min(int a, int b) {
+        if (a < b) {
+            return a;
+        }
+        return b;
+    }
+}
