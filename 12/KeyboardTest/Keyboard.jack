@@ -70,6 +70,9 @@ class Keyboard {
         var char c;
         var String str;
 
+        /** String of length 64 because that's the length of one screen line */
+        let str = String.new(64);
+
         do Output.printString(message);
 
         while (true) {
@@ -80,7 +83,6 @@ class Keyboard {
             }
             if (c = 129) {
                 do str.eraseLastChar();
-                do Output.backspace();
             }
             else {
                 let str = str.appendChar(c);
