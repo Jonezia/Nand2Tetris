@@ -1,0 +1,208 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/Screen.jack
+
+/**
+ * A library of functions for displaying graphics on the screen.
+ * The Hack physical screen consists of 512 rows (indexed 0..511, top to bottom)
+ * of 256 pixels each (indexed 0..255, left to right). The top left pixel on
+ * the screen is indexed (0,0).
+ */
+class Screen {
+    /** 0/false = white, -1/true = black */
+    static boolean color;
+    static Array powersOfTwo;
+
+    /** Initializes the Screen. */
+        function void init() {
+        var int i, n;
+
+        // Initialize twoToThe[]
+        let i = 0;
+        let n = 1;
+        let powersOfTwo = Array.new(16);
+        while(i < 16) {
+            let powersOfTwo[i] = n;
+            let n = n + n;
+            let i = i + 1;
+        }
+
+        let color = true;
+        return;
+    }
+
+    /** Erases the entire screen. */
+    function void clearScreen() {
+        var int address;
+        let address = 16384;
+        while(address < 24576) {
+            do Memory.poke(address,0);
+            let address = address + 1;
+        }
+        return;
+    }
+
+    /** Sets the current color, to be used for all subsequent drawXXX commands.
+     *  Black is represented by true, white by false. */
+    function void setColor(boolean b) {
+        let color = b;
+        return;
+    }
+
+    /** Draws the (x,y) pixel, using the current color. */
+    function void drawPixel(int x, int y) {
+        var int address, value;
+
+        let address = 16384 + (32*y) + (x/16);
+        let value = Memory.peek(address);
+        if (color) {
+            let value = value | powersOfTwo[x & 15];
+        }
+        else {
+            let value = value & ~powersOfTwo[x & 15];
+        }
+        do Memory.poke(address, value);
+        return;
+    }
+
+    /** Draws a line from pixel (x1,y1) to pixel (x2,y2), using the current color. */
+    function void drawLine(int x1, int y1, int x2, int y2) {
+        var int a, b, diff, dx, dy, temp;
+
+        let dx = x2 - x1;
+        let dy = y2 - y1;
+
+        /** Vertical lines */
+        if (dx = 0) {
+            if (y2 < y1) {
+                let temp = y1;
+                let y1 = y2;
+                let y2 = temp;
+            }
+            while (~(y1 > y2)) {
+                do Screen.drawPixel(x1, y1);
+                let y1 = y1 + 1;
+            }
+            return;
+        }
+
+        /** Horizontal lines */
+        if (dy = 0) {
+            if (x1 > x2) {
+                let temp = x1;
+                let x1 = x2;
+                let x2 = temp;
+            }
+            while (~(x2 < x1)) {
+                do Screen.drawPixel(x1, y1);
+                let x1 = x1 + 1;
+            }
+            return;
+        }
+
+        /** Diagonal lines */
+        /** diff = a*dy - b*dx */
+        let a = 0;
+        let b = 0;
+        let diff = 0;
+        if (dx > 0) {
+            /** Bottom-right */
+            if (dy > 0) {
+                while (~((a > dx) | (b > dy))) {
+                    do Screen.drawPixel(x1 + a, y1 + b);
+                    if (diff < 0) {
+                        let a = a + 1;
+                        let diff = diff + dy;
+                    }
+                    else {
+                        let b = b + 1;
+                        let diff = diff - dx;
+                    }
+                }
+                return;
+            }
+            /** Top-right (dy < 0) */
+            else {
+                let dy = -dy;
+                while (~((a > dx) | (b > dy))) {
+                    do Screen.drawPixel(x1 + a, y1 - b);
+                    if (diff < 0) {
+                        let a = a + 1;
+                        let diff = diff + dy;
+                    }
+                    else {
+                        let b = b + 1;
+                        let diff = diff - dx;
+                    }
+                }
+                return;
+            }
+        }
+        /** dx < 0 */
+        else {
+            let dx = -dx;
+            /** Bottom-left */
+            if (dy > 0) {
+                while (~((a > dx) | (b > dy))) {
+                    do Screen.drawPixel(x1 - a, y1 + b);
+                    if (diff < 0) {
+                        let a = a + 1;
+                        let diff = diff + dy;
+                    }
+                    else {
+                        let b = b + 1;
+                        let diff = diff - dx;
+                    }
+                }
+                return;
+            }
+            /** Bottom-right (dy < 0) */
+            else {
+                let dy = -dy;
+                while (~((a > dx) | (b > dy))) {
+                    do Screen.drawPixel(x1 - a, y1 - b);
+                    if (diff < 0) {
+                        let a = a + 1;
+                        let diff = diff + dy;
+                    }
+                    else {
+                        let b = b + 1;
+                        let diff = diff - dx;
+                    }
+                }
+                return;
+            }
+        }
+    }
+
+    /** Draws a filled rectangle whose top left corner is (x1, y1)
+     * and bottom right corner is (x2,y2), using the current color. */
+    function void drawRectangle(int x1, int y1, int x2, int y2) {
+        if (x2 < x1) {
+            return;
+        }
+        if (y2 < y1) {
+            return;
+        }
+        while (~(y1 > y2)) {
+            do Screen.drawLine(x1, y1, x2, y1);
+            let y1 = y1 + 1;
+        }
+        return;
+    }
+
+    /** Draws a filled circle of radius r<=181 around (x,y), using the current color. */
+    function void drawCircle(int x, int y, int r) {
+        var int dy, rsquared, squaredterm, yterm;
+        let dy = -r;
+        let rsquared = r*r;
+        while (~(dy > r)) {
+            let squaredterm = Math.sqrt(rsquared - (dy*dy));
+            let yterm = y + dy;
+            do Screen.drawLine(x - squaredterm, yterm, x + squaredterm, yterm);
+            let dy = dy + 1;
+        }
+        return;
+    }
+}
