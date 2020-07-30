@@ -68,7 +68,8 @@ class Screen {
 
     /** Draws a line from pixel (x1,y1) to pixel (x2,y2), using the current color. */
     function void drawLine(int x1, int y1, int x2, int y2) {
-        var int a, b, diff, dx, dy, temp;
+        var int a, b, diff, dx, dy, temp, address1, address2, x1mod, x2mod,
+        mask, value;
 
         let dx = x2 - x1;
         let dy = y2 - y1;
@@ -89,14 +90,87 @@ class Screen {
 
         /** Horizontal lines */
         if (dy = 0) {
-            if (x1 > x2) {
+            if (x2 < x1) {
                 let temp = x1;
                 let x1 = x2;
                 let x2 = temp;
             }
-            while (~(x2 < x1)) {
-                do Screen.drawPixel(x1, y1);
-                let x1 = x1 + 1;
+
+            let address1 = 16384 + (y1*32) + (x1/16);
+            let address2 = 16384 + (y1*32) + (x2/16);
+            let x1mod = x1&15;
+            let x2mod = x2&15;
+
+            // Single address
+            if (address1 = address2){
+                if (x1mod = 0){
+                    if(x2mod = 15){
+                        do Memory.poke(address1, color);
+                        return;
+                    }
+                    else{
+                        let mask = powersOfTwo[x2mod+1]-1;
+                    }
+                }
+                else{
+                    if(x2mod = 15){
+                        let mask = -powersOfTwo[x1mod];
+                    }
+                    else{
+                        let mask = (powersOfTwo[x2mod+1]-1) & (-powersOfTwo[x1mod]);
+                    }
+                }
+
+                let value = Memory.peek(address1);
+                if (color) {
+                    let value = value | mask;
+                }
+                else {
+                    let value = value & ~mask;
+                }
+                do Memory.poke(address1, value);
+            }
+            // Multiple addresses
+            else {
+
+                // fill in address1
+                if(x1mod = 0){
+                    do Memory.poke(address1, color);
+                }
+                else{
+                    let mask = -powersOfTwo[x1mod];
+                    let value = Memory.peek(address1);
+                    if (color) {
+                        let value = value | mask;
+                    }
+                    else {
+                        let value = value & ~mask;
+                    }
+                    do Memory.poke(address1, value);
+                }
+
+                // fill in solid addresses in between address1 and address2
+                let address1 = address1 + 1;
+                while(address1 < address2){
+                    do Memory.poke(address1, color);
+                    let address1 = address1 + 1;
+                }
+
+                // fill in address2
+                if(x2mod = 15){
+                    do Memory.poke(address2, color);
+                }
+                else{
+                    let mask = powersOfTwo[x2mod+1]-1;
+                    let value = Memory.peek(address2);
+                    if (color) {
+                        let value = value | mask;
+                    }
+                    else {
+                        let value = value & ~mask;
+                    }
+                    do Memory.poke(address2, value);
+                }
             }
             return;
         }
